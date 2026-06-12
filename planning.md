@@ -16,18 +16,34 @@ You must have at least 3 tools. The three required tools are listed — add any 
 
 **What it does:**
 <!-- Describe what this tool does in 1–2 sentences -->
+The purpose of FitFindr to find secondhand listings based on user query and create outfit based on user's closet. It then provides a shareable "fit card" based on the outfit.
 
 **Input parameters:**
 <!-- List each parameter, its type, and what it represents -->
-- `description` (str): ...
-- `size` (str): ...
-- `max_price` (float): ...
+- `description` (str): text describing the desired item
+- `size` (str): clothing size
+- `max_price` (float): maximum price of the item
 
 **What it returns:**
 <!-- Describe the return value — what fields does a result contain? -->
+Return an object containing:
+- success (bool): whether the function succeeded
+- result (list): list of matching item each containing:
+     - id (str): Unique listing identifier
+     - title (str): Listing title 
+     - description (str): Full item description
+     - price (float): Listed price
+     - size (str): Item size
+     - platform (str): Source platform
+     - condition (str): Item condition
+     - relevance_score (float): How well the item matches the description
 
 **What happens if it fails or returns nothing:**
 <!-- What should the agent do if no listings match? -->
+If it fails, it will return an object containing:
+- success (bool): Whether the function succeeded
+- error_type (str): The type of error that occurred
+- message (str): Error message containing detail on what went wrong
 
 ---
 
@@ -35,17 +51,30 @@ You must have at least 3 tools. The three required tools are listed — add any 
 
 **What it does:**
 <!-- Describe what this tool does in 1–2 sentences -->
+Used the new thrift item and the wardrobe item to create outfit suggestions.
 
 **Input parameters:**
 <!-- List each parameter, its type, and what it represents -->
-- `new_item` (dict): ...
-- `wardrobe` (dict): ...
+- `new_item` (dict): the thrift item
+- `wardrobe` (dict): the user's clothing inventory
 
 **What it returns:**
 <!-- Describe the return value -->
+Return an object containing:
+- success (bool): Whether the function succeeded
+- result (list): A list of outfit suggestions, each containing:
+     - outfit_id (int): Id of the outfit
+     - description (str): description of the outfit
+     - pieces_used (list): Names of items used in the outfit
+     - vibe (str): Style category
+     - occasion (str): Suggested wearing context
 
 **What happens if it fails or returns nothing:**
 <!-- What should the agent do if the wardrobe is empty or no outfit can be suggested? -->
+If it fails, it will return an object containing:
+- success (bool): Whether the function succeeded
+- error_type (str): The type of error that occurred
+- message (str): Error message containing detail on what went wrong
 
 ---
 
@@ -53,16 +82,26 @@ You must have at least 3 tools. The three required tools are listed — add any 
 
 **What it does:**
 <!-- Describe what this tool does in 1–2 sentences -->
+Generate social-media-ready captions describing the outfit.
 
 **Input parameters:**
 <!-- List each parameter, its type, and what it represents -->
-- `outfit` (...): ...
+- `outfit` (dict): the put-together outfit
+
 
 **What it returns:**
 <!-- Describe the return value -->
+Returns a dictionary containing:
+- success (bool): Whether the function succeeded
+- caption (str): Shareable caption text
+- confidence (float): How confident the agent is in this fit card (0-1)
 
 **What happens if it fails or returns nothing:**
 <!-- What should the agent do if the outfit data is incomplete? -->
+If it fails, it will return an object containing:
+- success (bool): Whether the function succeeded
+- error_type (str): The type of error that occurred
+- message (str): Error message containing detail on what went wrong
 
 ---
 
