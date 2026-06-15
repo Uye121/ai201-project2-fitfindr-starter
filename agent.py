@@ -17,7 +17,7 @@ Usage (once implemented):
     print(result["fit_card"])
     print(result["error"])   # None on success
 """
-
+import re
 from tools import search_listings, suggest_outfit, create_fit_card
 
 
@@ -44,6 +44,77 @@ def _new_session(query: str, wardrobe: dict) -> dict:
         "error": None,               # set if the interaction ended early
     }
 
+def _parse_query(query: str) -> dict:
+    """
+    Extract search description, optional size, and optional max_price from a user
+    given query.
+    """
+    result = {
+        "description": "",
+        "size": None,
+        "max_price": None
+    }
+
+    if not query:
+        return result
+
+    cleaned_query = query.strip().lower()
+
+    # Extract max_price
+    price_patterns = [
+        r'\$(\d+(?:\.\d{1,2})?)',  # $30 or $30.50
+        r'(\d+(?:\.\d{1,2})?)\s*dollars?',  # 30 dollars
+        r'under\s*\$?(\d+(?:\.\d{1,2})?)',  # under $30
+        r'less than\s*\$?(\d+(?:\.\d{1,2})?)',  # less than 30
+        r'max\s*\$?(\d+(?:\.\d{1,2})?)',  # max $30
+        r'up to\s*\$?(\d+(?:\.\d{1,2})?)',  # up to $30
+        r'budget of?\s*\$?(\d+(?:\.\d{1,2})?)',  # budget of $30
+    ]
+
+    for pattern in price_patterns:
+        match = re.search(pattern, cleaned_query)
+        if match:
+            result["max_price"] = float(match.group(1))
+            cleaned_query = cleaned_query.replace(match.group(0), "")
+            break
+
+    # Extract size
+    size_map = {
+        "small": "S", "medium": "M", "large": "L", "xlarge": "XL",
+        "extra large": "XL", "xxlarge": "XXL", "extra small": "XS",
+        "xxsmall": "XXS", "one size": "ONE SIZE", "onesize": "ONE SIZE",
+        "os": "ONE SIZE"
+    }
+    size_patterns = [
+        r' size\s*[:]?\s*([A-Z0-9/]+)',  # size M, size S/M, size 8
+        r'\b(size|sized?)\s+([A-Z0-9/]+)\b',  # size medium, sized L
+        r'\b(in|a)\s+([A-Z0-9/]+)\b',  # in M, a L
+        r'\b(small|medium|large|xlarge|xl|xxl|xs|s|m|l|xl|xxs)\b',  # text sizes
+    ]
+
+    for pattern in size_patterns:
+        # For patterns with capture groups
+        match = re.search(pattern, cleaned_query)
+        if match:
+            # Get the captured size
+            groups = match.groups()
+            if groups:
+                extracted_size = groups[-1].upper()
+            else:
+                extracted_size = match.group(0).upper()
+            
+            # Map text sizes to abbreviations
+            if extracted_size.lower() in size_map:
+                extracted_size = size_map[extracted_size.lower()]
+            
+            result["size"] = extracted_size
+            cleaned_query = cleaned_query.replace(match.group(0), " ")
+            break
+
+    result["description"] = cleaned_query
+
+    return result
+
 
 # ── planning loop ─────────────────────────────────────────────────────────────
 
@@ -62,41 +133,37 @@ def run_agent(query: str, wardrobe: dict) -> dict:
         The session dict after the interaction completes. Check session["error"]
         first — if it is not None, the interaction ended early and the other
         output fields (outfit_suggestion, fit_card) will be None.
-
-    TODO — implement this function using the planning loop you designed in planning.md:
-
-        Step 1: Initialize the session with _new_session().
-
-        Step 2: Parse the user's query to extract a description, size, and
-                max_price. You can use regex, string splitting, or ask the LLM
-                to parse it — document your choice in planning.md.
-                Store the result in session["parsed"].
-
-        Step 3: Call search_listings() with the parsed parameters.
-                Store results in session["search_results"].
-                If no results: set session["error"] to a helpful message and
-                return the session early. Do NOT proceed to suggest_outfit
-                with empty input.
-
-        Step 4: Select the item to use (e.g., the top result).
-                Store it in session["selected_item"].
-
-        Step 5: Call suggest_outfit() with the selected item and wardrobe.
-                Store the result in session["outfit_suggestion"].
-
-        Step 6: Call create_fit_card() with the outfit suggestion and selected item.
-                Store the result in session["fit_card"].
-
-        Step 7: Return the session.
-
-    Before writing code, complete the Planning Loop and State Management sections
-    of planning.md — your implementation should match what you described there.
     """
-    # TODO: implement the planning loop
     session = _new_session(query, wardrobe)
-    session["error"] = "Planning loop not yet implemented."
-    return session
 
+    query_dict = _parse_query(query)
+    session["parsed"] = query_dict
+
+    listings = search_listings(
+        description=query_dict["description"],
+        size=query_dict["size"],
+        max_price=query_dict["max_price"]
+    )
+
+    # If no results, set error and return early
+    if not listings:
+        error_msg = f"No listings found for '{query_dict['description']}'"
+        if query_dict['size']:
+            error_msg += f" in size {query_dict['size']}"
+        if query_dict['max_price']:
+            error_msg += f" under ${query_dict['max_price']}"
+        session["error"] = error_msg
+        return session
+
+    session["search_results"] = listings
+    session["selected_item"] = listings[0]
+
+    suggestion = suggest_outfit(new_item=listings[0], wardrobe=wardrobe)
+    session["outfit_suggestion"] = suggestion
+
+    session["fit_card"] = create_fit_card(outfit=suggestion, new_item=listings[0])
+
+    return session
 
 # ── CLI test ──────────────────────────────────────────────────────────────────
 

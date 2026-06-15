@@ -147,34 +147,22 @@ def suggest_outfit(new_item: dict, wardrobe: dict) -> str:
     wardrobe_items = wardrobe.get("items", [])
     is_wardrobe_empty = len(wardrobe_items) == 0
     
-    # Format new item details for the prompt
-    new_item_info = f"""
-        Item to style:
-        - Title: {new_item.get('title', 'Unknown')}
-        - Category: {new_item.get('category', 'Unknown')}
-        - Style tags: {', '.join(new_item.get('style_tags', []))}
-        - Colors: {', '.join(new_item.get('colors', []))}
-        - Condition: {new_item.get('condition', 'Unknown')}
-        - Brand: {new_item.get('brand', 'Unknown brand')}
-        - Description: {new_item.get('description', 'No description provided')}
-        """
-    
     if is_wardrobe_empty:
         # Fallback: General styling advice when wardrobe is empty
         prompt = f"""You are a fashion stylist giving buying advice for someone with an empty wardrobe.
 
-        New item: {new_item.get('title', 'Unknown')} ({', '.join(new_item.get('colors', []))}, {new_item.get('category', 'Unknown')})
+                New item: {new_item.get('title', 'Unknown')} ({', '.join(new_item.get('colors', []))}, {new_item.get('category', 'Unknown')})
 
-        Give 1-2 outfit formulas suggesting TYPES of clothing they should buy to go with this item:
-        - Write as a single paragraph (no bullet points, no numbered lists)
-        - Use "a", "your", or general categories (e.g., "a pair of wide-leg jeans", "some chunky boots")
-        - DO NOT pretend they already own specific items
-        - Include 1 styling tip per outfit
-        - Be direct and concise
+                Give 1-2 outfit formulas suggesting TYPES of clothing they should buy to go with this item:
+                - Write as a single paragraph (no bullet points, no numbered lists)
+                - Use "a", "your", or general categories (e.g., "a pair of wide-leg jeans", "some chunky boots")
+                - DO NOT pretend they already own specific items
+                - Include 1 styling tip per outfit
+                - Be direct and concise
 
-        Example: "Get some wide-leg jeans and platform sneakers. French tuck the front."
+                Example: "Get some wide-leg jeans and platform sneakers. French tuck the front."
 
-        Return only the suggestions, nothing else."""
+                Return only the suggestions, nothing else."""
     else:
         # Format wardrobe items for the prompt
         wardrobe_list = []
@@ -190,25 +178,25 @@ def suggest_outfit(new_item: dict, wardrobe: dict) -> str:
         
         prompt = f"""You are a fashion stylist giving quick, actionable advice.
 
-        New item: {new_item.get('title', 'Unknown')} ({', '.join(new_item.get('colors', []))}, {new_item.get('category', 'Unknown')})
+                New item: {new_item.get('title', 'Unknown')} ({', '.join(new_item.get('colors', []))}, {new_item.get('category', 'Unknown')})
 
-        User's wardrobe includes:
-        {wardrobe_text}
+                User's wardrobe includes:
+                {wardrobe_text}
 
-        Give 1-2 outfit suggestions following these rules:
-        - Write as a single paragraph (no bullet points, no numbered lists)
-        - Be direct and concise (like a friend giving advice)
-        - Name specific pieces from their wardrobe
-        - Include 1 quick styling tip per outfit (tuck, roll, layer, etc.)
-        - Use "and" or "or" to separate multiple suggestions
-        - NO explanations of why it works
-        - NO "I'm excited" or similar commentary
-        - NO meta statements
-        - NO line breaks
+                Give 1-2 outfit suggestions following these rules:
+                - Write as a single paragraph (no bullet points, no numbered lists)
+                - Be direct and concise (like a friend giving advice)
+                - Name specific pieces from their wardrobe
+                - Include 1 quick styling tip per outfit (tuck, roll, layer, etc.)
+                - Use "and" or "or" to separate multiple suggestions
+                - NO explanations of why it works
+                - NO "I'm excited" or similar commentary
+                - NO meta statements
+                - NO line breaks
 
-        Example: "Pair with your wide-leg jeans and platform Docs for a classic 90s grunge look. Roll the sleeves once and tuck the front corner slightly for shape. Or try with your black leggings and chunky sneakers for a sportier vibe."
+                Example: "Pair with your wide-leg jeans and platform Docs for a classic 90s grunge look. Roll the sleeves once and tuck the front corner slightly for shape. Or try with your black leggings and chunky sneakers for a sportier vibe."
 
-        Return only the suggestions, nothing else."""
+                Return only the suggestions, nothing else."""
 
     try:
         client = _get_groq_client()
@@ -281,30 +269,30 @@ def create_fit_card(outfit: str, new_item: dict) -> str:
         item_colors = ', '.join(new_item.get('colors', [])) if new_item.get('colors') else 'neutral'
         
         prompt = f"""You're posting an OOTD (Outfit Of The Day) photo on Instagram/TikTok. 
-            You just thrifted this item and styled it according to the suggestion below.
+                You just thrifted this item and styled it according to the suggestion below.
 
-            ITEM DETAILS:
-            - Name: {item_title}
-            - Category: {item_category}
-            - Colors: {item_colors}
-            - Price: ${item_price}
-            - Platform: {item_platform}
+                ITEM DETAILS:
+                - Name: {item_title}
+                - Category: {item_category}
+                - Colors: {item_colors}
+                - Price: ${item_price}
+                - Platform: {item_platform}
 
-            OUTFIT SUGGESTION:
-            {outfit}
+                OUTFIT SUGGESTION:
+                {outfit}
 
-            Write a 2-4 sentence caption for your post. Rules:
-            - Sound casual and authentic (like a real person posting, not an ad)
-            - Mention the item name, price, and platform exactly once each (natural placement)
-            - Capture the specific outfit vibe (e.g., "grungy but make it cute", "lazy sunday energy")
-            - NO hashtags
-            - NO emojis (unless it's 1-2 max and actually fits)
-            - NO "I'm obsessed" or influencer clichés
-            - Be concise - short punchy sentences
+                Write a 2-4 sentence caption for your post. Rules:
+                - Sound casual and authentic (like a real person posting, not an ad)
+                - Mention the item name, price, and platform exactly once each (natural placement)
+                - Capture the specific outfit vibe (e.g., "grungy but make it cute", "lazy sunday energy")
+                - NO hashtags
+                - NO emojis (unless it's 1-2 max and actually fits)
+                - NO "I'm obsessed" or influencer clichés
+                - Be concise - short punchy sentences
 
-            Example caption: "Threw this vintage tee ($12 on Depop) over my go-to wide-leg jeans. Giving 90s alt energy without trying too hard. Rolled the sleeves once and called it a day."
+                Example caption: "Threw this vintage tee ($12 on Depop) over my go-to wide-leg jeans. Giving 90s alt energy without trying too hard. Rolled the sleeves once and called it a day."
 
-            Return ONLY the caption, nothing else."""
+                Return ONLY the caption, nothing else."""
         # Make LLM call with higher temperature for variety
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
